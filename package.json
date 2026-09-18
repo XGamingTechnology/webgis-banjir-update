@@ -1,0 +1,28 @@
+{
+  "name": "webgis-banjir",
+  "version": "1.0.0",
+  "description": "Sistem WebGIS Inventarisasi Genangan Banjir",
+  "main": "src/main.js",
+  "scripts": {
+    "dev": "node src/main.js",
+    "start": "node server/index.js"
+  },
+  "keywords": [
+    "gis",
+    "banjir",
+    "webgis",
+    "postgis"
+  ],
+  "author": "Your Name",
+  "license": "MIT",
+  "dependencies": {
+    "bootstrap": "^5.3.8",
+    "maplibre-gl": "^5.10.0"
+  },
+  "devDependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.3",
+    "express": "^5.1.0",
+    "pg": "^8.16.3"
+  }
+}
