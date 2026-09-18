@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#0f3d56" />
+  <title>WebGIS Inventaris Genangan Banjir · Kabupaten Bandung</title>
+  <link rel="preconnect" href="https://unpkg.com" />
+  <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@5.10.0/dist/maplibre-gl.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+  <link rel="stylesheet" href="/src/styles.css" />
+</head>
+<body>
+  <aside class="sidebar" id="sidebar" aria-label="Navigasi utama">
+    <div class="brand-block">
+      <div class="brand-mark"><i class="bi bi-water"></i></div>
+      <div>
+        <strong>WebGIS Banjir</strong>
+        <span>Kabupaten Bandung</span>
+      </div>
+    </div>
+
+    <nav class="nav-list">
+      <a href="#overview" class="nav-item active"><i class="bi bi-grid-1x2"></i><span>Ringkasan</span></a>
+      <a href="#map-section" class="nav-item"><i class="bi bi-map"></i><span>Peta Interaktif</span></a>
+      <a href="#data-section" class="nav-item"><i class="bi bi-table"></i><span>Data Inventaris</span></a>
+    </nav>
+
+    <div class="sidebar-divider"></div>
+    <p class="sidebar-label">LAYER PETA</p>
+    <label class="toggle-row">
+      <span><i class="bi bi-bounding-box-circles"></i> Klasifikasi Kecamatan</span>
+      <input id="layer-districts" type="checkbox" checked />
+    </label>
+    <label class="toggle-row">
+      <span><i class="bi bi-pentagon"></i> Area Genangan</span>
+      <input id="layer-areas" type="checkbox" checked />
+    </label>
+    <label class="toggle-row">
+      <span><i class="bi bi-geo-alt"></i> Titik Genangan</span>
+      <input id="layer-points" type="checkbox" checked />
+    </label>
+    <label class="toggle-row">
+      <span><i class="bi bi-fire"></i> Heatmap</span>
+      <input id="layer-heatmap" type="checkbox" />
+    </label>
+
+    <div class="sidebar-foot">
+      <span class="dot dot-green"></span>
+      <span>Prototype modernisasi UI/UX</span>
+    </div>
+  </aside>
+
+  <div class="mobile-overlay" id="mobile-overlay"></div>
+
+  <header class="topbar">
+    <button class="icon-btn menu-btn" id="menu-btn" aria-label="Buka menu"><i class="bi bi-list"></i></button>
+    <div>
+      <p class="eyebrow">Dinas terkait · Inventarisasi Genangan Banjir</p>
+      <h1>Dashboard WebGIS</h1>
+    </div>
+    <div class="topbar-actions">
+      <span class="data-status loading" id="data-status"><span class="status-dot"></span>Memuat data legacy</span>
+      <button class="btn btn-secondary" id="print-btn"><i class="bi bi-printer"></i><span>Cetak</span></button>
+    </div>
+  </header>
+
+  <main class="main-shell">
+    <section id="overview" class="intro-row">
+      <div>
+        <span class="section-kicker">WEBGIS INVENTARISASI GENANGAN BANJIR</span>
+        <h2>Informasi banjir dalam satu tampilan yang lebih cepat dibaca.</h2>
+        <p>Prototype ini menggunakan data GeoJSON sistem lama sebagai sumber read-only. Filter, statistik, peta, detail lokasi, dan tabel saling terhubung.</p>
+      </div>
+      <div class="prototype-badge">
+        <i class="bi bi-stars"></i>
+        <div><strong>Client Demo</strong><span>UI/UX Modernisation · 2026</span></div>
+      </div>
+    </section>
+
+    <section class="kpi-grid" aria-label="Ringkasan data">
+      <article class="kpi-card">
+        <div class="kpi-icon"><i class="bi bi-geo-alt"></i></div>
+        <div><span>Titik genangan</span><strong id="kpi-points">—</strong><small id="kpi-points-note">Data terfilter</small></div>
+      </article>
+      <article class="kpi-card">
+        <div class="kpi-icon"><i class="bi bi-buildings"></i></div>
+        <div><span>Kecamatan terdampak</span><strong id="kpi-districts">—</strong><small>Lokasi unik</small></div>
+      </article>
+      <article class="kpi-card">
+        <div class="kpi-icon danger"><i class="bi bi-exclamation-triangle"></i></div>
+        <div><span>Kategori tinggi</span><strong id="kpi-high">—</strong><small id="kpi-high-note">Proporsi data</small></div>
+      </article>
+      <article class="kpi-card">
+        <div class="kpi-icon"><i class="bi bi-rulers"></i></div>
+        <div><span>Akumulasi luas</span><strong id="kpi-area">—</strong><small>m² dari titik terfilter</small></div>
+      </article>
+    </section>
+
+    <section class="filter-card" aria-label="Filter data">
+      <div class="filter-title"><i class="bi bi-funnel"></i><div><strong>Filter data</strong><span>Pilih parameter untuk memperbarui seluruh dashboard.</span></div></div>
+      <div class="filter-controls">
+        <label>Tahun
+          <select id="filter-year"><option value="">Semua tahun</option></select>
+        </label>
+        <label>Kecamatan
+          <select id="filter-district"><option value="">Semua kecamatan</option></select>
+        </label>
+        <label>Kategori
+          <select id="filter-category"><option value="">Semua kategori</option></select>
+        </label>
+        <button class="btn btn-ghost" id="reset-filter"><i class="bi bi-arrow-counterclockwise"></i>Reset</button>
+      </div>
+    </section>
+
+    <section id="map-section" class="map-card">
+      <div class="card-heading">
+        <div><span class="section-kicker">PETA INTERAKTIF</span><h3>Distribusi genangan Kabupaten Bandung</h3></div>
+        <div class="map-tools">
+          <label class="basemap-control"><span>Basemap</span>
+            <select id="basemap-select"><option value="osm">OpenStreetMap</option><option value="satellite">Satellite</option></select>
+          </label>
+          <button class="btn btn-ghost" id="fit-map"><i class="bi bi-arrows-fullscreen"></i>Fit data</button>
+        </div>
+      </div>
+      <div class="map-wrap">
+        <div id="map" role="application" aria-label="Peta inventaris genangan banjir"></div>
+        <div class="map-loading" id="map-loading"><div class="spinner"></div><span>Menyiapkan data spasial…</span></div>
+        <div class="legend-card">
+          <strong>Legenda kategori</strong>
+          <span><i class="legend-dot high"></i>Tinggi</span>
+          <span><i class="legend-dot medium"></i>Sedang</span>
+          <span><i class="legend-dot low"></i>Rendah / tidak banjir</span>
+        </div>
+        <div class="map-counter"><strong id="map-result-count">0</strong><span>titik tampil</span></div>
+      </div>
+    </section>
+
+    <section id="data-section" class="data-card">
+      <div class="card-heading data-heading">
+        <div><span class="section-kicker">DATA INVENTARIS</span><h3>Daftar lokasi genangan</h3><p id="table-summary">Memuat data…</p></div>
+        <div class="data-actions">
+          <label class="search-box"><i class="bi bi-search"></i><input id="table-search" type="search" placeholder="Cari jalan, desa, kecamatan…" /></label>
+          <button class="btn btn-primary" id="export-csv"><i class="bi bi-download"></i>Ekspor CSV</button>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Tahun</th><th>Kecamatan</th><th>Desa</th><th>Lokasi / Ruas Jalan</th><th>Tinggi</th><th>Luas</th><th>Kategori</th><th></th></tr></thead>
+          <tbody id="data-table-body"><tr><td colspan="8" class="empty-row">Memuat data…</td></tr></tbody>
+        </table>
+      </div>
+    </section>
+
+    <footer class="page-foot">
+      <span>Prototype WebGIS Banjir v2 · Data legacy 2023–2024</span>
+      <span>Disiapkan untuk demonstrasi modernisasi sistem</span>
+    </footer>
+  </main>
+
+  <aside class="detail-drawer" id="detail-drawer" aria-hidden="true">
+    <button class="drawer-close" id="drawer-close" aria-label="Tutup detail"><i class="bi bi-x-lg"></i></button>
+    <div class="drawer-photo-wrap"><div class="photo-placeholder" id="photo-placeholder"><i class="bi bi-image"></i><span>Foto tidak tersedia</span></div><img id="detail-photo" alt="Foto lokasi genangan" /></div>
+    <div class="drawer-body">
+      <span class="detail-year" id="detail-year">—</span>
+      <h3 id="detail-location">Detail lokasi</h3>
+      <p class="detail-subtitle" id="detail-subtitle">—</p>
+      <div class="detail-grid">
+        <div><span>Desa</span><strong id="detail-village">—</strong></div>
+        <div><span>Kategori</span><strong id="detail-category">—</strong></div>
+        <div><span>Tinggi genangan</span><strong id="detail-height">—</strong></div>
+        <div><span>Luas genangan</span><strong id="detail-area">—</strong></div>
+        <div><span>Durasi</span><strong id="detail-duration">—</strong></div>
+        <div><span>Intensitas</span><strong id="detail-intensity">—</strong></div>
+      </div>
+      <div class="detail-note"><span>Penyebab genangan</span><p id="detail-cause">—</p></div>
+      <div class="coordinates"><i class="bi bi-crosshair"></i><span id="detail-coordinates">—</span></div>
+    </div>
+  </aside>
+
+  <script src="https://unpkg.com/maplibre-gl@5.10.0/dist/maplibre-gl.js"></script>
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>
