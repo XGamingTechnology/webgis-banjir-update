@@ -1,0 +1,19 @@
+services:
+  webgis:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: webgis-banjir-staging
+    environment:
+      PORT: "3000"
+    ports:
+      - "127.0.0.1:${WEBGIS_PORT:-3100}:3000"
+    networks:
+      - default
+      - frontend
+    restart: unless-stopped
+
+networks:
+  frontend:
+    external: true
+    name: si-cuti-staging-frontend
